@@ -1,98 +1,104 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Money Flow (Backend)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend API for **Money Flow** — track income, expenses, and investments. Built with **NestJS** and **MongoDB** (monolith). A React Native mobile app will consume this API.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tech stack
 
-## Description
+- **Runtime:** Node.js  
+- **Framework:** NestJS  
+- **Database:** MongoDB (Mongoose)  
+- **Auth:** JWT (access + refresh tokens), email/password, Google Sign-In (ID token)  
+- **Validation:** class-validator / class-transformer  
+- **Docs:** Swagger (OpenAPI)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Features
 
-## Project setup
+- **Auth:** Register, login (email/password), Google login, refresh token, profile
+- **Categories:** CRUD; user-scoped and system categories; type = income | expense | investment
+- **Transactions:** CRUD; amount, currency, date, description, category (type derived from category)
+- **Docker:** Dockerfile + docker-compose (app + MongoDB)
 
-```bash
-$ npm install
-```
+## Prerequisites
 
-## Compile and run the project
+- Node.js 18+
+- MongoDB (local or Docker)
+- For Google Sign-In: Google OAuth 2.0 Client ID
+
+## Setup
 
 ```bash
-# development
-$ npm run start
+# Install dependencies
+npm install
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+# Copy env and set values (see .env.example)
+cp .env.example .env
+# Edit .env: MONGODB_URI, JWT_SECRET, GOOGLE_CLIENT_ID (optional)
 ```
 
-## Run tests
+## Run
 
 ```bash
-# unit tests
-$ npm run test
+# Development (watch)
+npm run start:dev
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# Production build + run
+npm run build
+npm run start:prod
 ```
 
-## Deployment
+API: **http://localhost:3000**  
+Swagger UI: **http://localhost:3000/api**
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Docker
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Build and run app + MongoDB
+docker compose up --build
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+- App: port **3000**  
+- MongoDB: port **27017**  
+- Set `JWT_SECRET` and `GOOGLE_CLIENT_ID` in `.env` (or in `docker-compose` env).
 
-## Resources
+## Scripts
 
-Check out a few resources that may come in handy when working with NestJS:
+| Command           | Description              |
+|-------------------|--------------------------|
+| `npm run start`   | Start app                |
+| `npm run start:dev` | Start in watch mode    |
+| `npm run build`   | Build for production     |
+| `npm run start:prod` | Run production build  |
+| `npm run lint`    | Run ESLint               |
+| `npm run test`    | Unit tests               |
+| `npm run test:e2e`| E2E tests                |
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## API overview
 
-## Support
+| Area        | Endpoints |
+|------------|-----------|
+| **Auth**   | `POST /auth/register`, `POST /auth/login`, `POST /auth/google`, `POST /auth/refresh`, `GET /auth/profile` |
+| **Categories** | `GET/POST /categories`, `GET/PATCH/DELETE /categories/:id` |
+| **Transactions** | `GET/POST /transactions`, `GET/PATCH/DELETE /transactions/:id` |
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Protected routes use **Bearer** token (`Authorization: Bearer <accessToken>`).  
+See **[docs/API.md](docs/API.md)** for request/response details and **[docs/DATA_MODELS.md](docs/DATA_MODELS.md)** for entities and relations.
 
-## Stay in touch
+## Project structure
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```
+src/
+├── auth/           # Auth, JWT, refresh token, Google
+├── users/          # User schema and service
+├── categories/     # Categories CRUD
+├── transactions/   # Transactions CRUD (type from category)
+├── common/         # Shared enums (e.g. TransactionType)
+├── app.module.ts
+└── main.ts
+docs/
+├── API.md          # API reference
+└── DATA_MODELS.md  # Entities and relations
+```
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+UNLICENSED (see [package.json](package.json)).
