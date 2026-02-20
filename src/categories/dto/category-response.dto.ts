@@ -14,10 +14,8 @@ export class CategoryResponseDto {
   @ApiPropertyOptional({ example: 'utensils' })
   icon?: string;
 
-  @ApiPropertyOptional({
-    description: 'User ID if user-specific; null for system category',
-  })
-  userId?: string | null;
+  @ApiProperty({ description: 'Money flow ID this category belongs to' })
+  moneyFlowId: string;
 
   @ApiProperty()
   createdAt: string;

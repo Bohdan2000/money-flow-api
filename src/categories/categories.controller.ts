@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -34,23 +35,30 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a category' })
+  @ApiOperation({ summary: 'Create a category for a money flow' })
   @ApiResponse({
     status: 201,
     description: 'Category created',
     type: CategoryResponseDto,
   })
   @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 404, description: 'Money flow not found' })
   @ApiResponse({
     status: 409,
-    description: 'Category with same name and type already exists',
+    description:
+      'Category with same name and type already exists in this money flow',
   })
   create(@CurrentUser() user: UserDocument, @Body() dto: CreateCategoryDto) {
     return this.categoriesService.create(user._id, dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'List user and system categories' })
+  @ApiOperation({ summary: 'List categories for a money flow' })
+  @ApiQuery({
+    name: 'moneyFlowId',
+    required: true,
+    description: 'Money flow ID',
+  })
   @ApiQuery({
     name: 'type',
     required: false,
@@ -62,11 +70,20 @@ export class CategoriesController {
     description: 'List of categories',
     type: [CategoryResponseDto],
   })
+  @ApiResponse({ status: 404, description: 'Money flow not found' })
   findAll(
     @CurrentUser() user: UserDocument,
+    @Query('moneyFlowId') moneyFlowId: string | undefined,
     @Query('type') type?: TransactionType,
   ) {
-    return this.categoriesService.findAllForUser(user._id, type);
+    if (!moneyFlowId) {
+      throw new BadRequestException('moneyFlowId query is required');
+    }
+    return this.categoriesService.findAllForMoneyFlow(
+      moneyFlowId,
+      user._id,
+      type,
+    );
   }
 
   @Get(':id')
@@ -83,7 +100,7 @@ export class CategoriesController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update a category (user categories only)' })
+  @ApiOperation({ summary: 'Update a category' })
   @ApiParam({ name: 'id', description: 'Category ID' })
   @ApiResponse({
     status: 200,
@@ -91,7 +108,6 @@ export class CategoriesController {
     type: CategoryResponseDto,
   })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  @ApiResponse({ status: 409, description: 'Cannot update system category' })
   update(
     @CurrentUser() user: UserDocument,
     @Param('id') id: string,
@@ -101,11 +117,10 @@ export class CategoriesController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a category (user categories only)' })
+  @ApiOperation({ summary: 'Delete a category' })
   @ApiParam({ name: 'id', description: 'Category ID' })
   @ApiResponse({ status: 200, description: 'Category deleted' })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  @ApiResponse({ status: 409, description: 'Cannot delete system category' })
   async remove(@CurrentUser() user: UserDocument, @Param('id') id: string) {
     await this.categoriesService.remove(id, user._id);
   }

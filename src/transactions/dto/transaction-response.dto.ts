@@ -1,22 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { TransactionType } from '../../common/enums/transaction-type.enum';
-
-export class TransactionCategoryDto {
-  @ApiProperty()
-  _id: string;
-
-  @ApiProperty()
-  name: string;
-
-  @ApiProperty({
-    enum: TransactionType,
-    description: 'Transaction type (from category)',
-  })
-  type: TransactionType;
-
-  @ApiPropertyOptional()
-  icon?: string;
-}
 
 export class TransactionResponseDto {
   @ApiProperty()
@@ -34,14 +16,14 @@ export class TransactionResponseDto {
   @ApiPropertyOptional()
   description?: string;
 
-  @ApiProperty({
-    type: TransactionCategoryDto,
-    description: 'Populated category (type is on category)',
-  })
-  categoryId: TransactionCategoryDto;
+  @ApiProperty({ description: 'Category ID' })
+  categoryId: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'User ID' })
   userId: string;
+
+  @ApiProperty({ description: 'Tag IDs', type: [String], example: ['507f1f77bcf86cd799439013'] })
+  tagIds: string[];
 
   @ApiProperty()
   createdAt: string;

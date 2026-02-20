@@ -6,21 +6,26 @@ Backend: NestJS (monolith) · Database: MongoDB
 
 ## Entity Relationship Overview
 
+**Flow: User → creates MoneyFlow → then Categories for that flow → then Transactions (with category from that flow).**
+
 ```
-┌─────────────┐      1:N        ┌───────────────┐
-│    User     │────────────────▶│  Transaction  │
-└─────────────┘                 └───────┬───────┘
-       │                                │
-       │ 1:N                            │ N:1
-       ▼                                ▼
-┌─────────────┐                 ┌───────────────┐
-│  Category   │◀────────────────│  (categoryId) │
-└─────────────┘                 └───────────────┘
+                    ┌───────────────┐
+                    │  MoneyFlow    │
+        User ──1:N─▶│  (group)      │──1:N──▶ Category
+                    └───────────────┘
+                            │
+                            │ Transaction → Category → MoneyFlow
+                            ▼
+                    ┌───────────────┐
+                    │  Transaction  │──N:1──▶ Category (money flow via category)
+                    └───────────────┘
 ```
 
-- **User** has many **Transactions** and many **Categories** (user-specific).
-- **Transaction** belongs to one **User** and one **Category**.
-- **Category** can be system-wide (`userId = null`) or user-specific (`userId` set).
+- **User** has many **MoneyFlows** (e.g. “Monthly budget”, “Investments only”).
+- **MoneyFlow** has many **Categories**. Categories are scoped to a money flow.
+- **Category** belongs to one **MoneyFlow** (name, type, icon).
+- **Transaction** belongs to one **User** and one **Category**. The money flow is derived via **Category.moneyFlowId** (no direct moneyFlowId on transaction).
+- **Tag** belongs to one **User** (name). **Transaction** has an array of tag IDs (`tagIds`); many-to-many between Transaction and Tag.
 
 ---
 
@@ -48,29 +53,50 @@ Authentication and profile. Supports email/password and Google login.
 
 ## 2. Category
 
-Categories for grouping transactions (e.g. “Food”, “Salary”, “Stocks”). Can be system defaults or per-user.
+Categories for grouping transactions within a **money flow** (e.g. “Food”, “Salary”). Created **after** a money flow; each category belongs to one money flow.
 
-| Field       | Type     | Required | Notes                                      |
-|------------|----------|----------|--------------------------------------------|
-| `_id`      | ObjectId | ✓        | MongoDB default                             |
-| `name`     | string   | ✓        | e.g. "Food", "Salary"                       |
-| `type`     | enum     | ✓        | `income` \| `expense` \| `investment`       |
-| `icon`     | string   | —        | Optional icon identifier for UI              |
-| `userId`   | ObjectId | —        | Ref User. `null` = system/default category  |
-| `createdAt`| Date     | ✓        |                                            |
-| `updatedAt`| Date     | ✓        |                                            |
+| Field        | Type     | Required | Notes                                |
+|-------------|----------|----------|--------------------------------------|
+| `_id`       | ObjectId | ✓        | MongoDB default                      |
+| `name`      | string   | ✓        | e.g. "Food", "Salary"                |
+| `type`      | enum     | ✓        | `income` \| `expense` \| `investment` |
+| `icon`      | string   | —        | Optional icon identifier for UI      |
+| `moneyFlowId` | ObjectId | ✓      | Ref MoneyFlow (owner flow)           |
+| `createdAt` | Date     | ✓        |                                      |
+| `updatedAt` | Date     | ✓        |                                      |
 
 **Constraints**
 
-- Compound unique index on `(name, type, userId)` so the same name can exist for different types or users.
+- Compound unique index on `(name, type, moneyFlowId)` so the same name can exist for different types or flows.
 
 **Relations**
 
-- **User** → **Category**: one-to-many (user has many categories; system categories have `userId = null`).
+- **MoneyFlow** → **Category**: one-to-many (categories are created for a money flow).
 
 ---
 
-## 3. Transaction
+## 3. MoneyFlow
+
+A named group for transactions (e.g. “Monthly budget”, “Investments only”). User-scoped.
+
+| Field        | Type     | Required | Notes                |
+|-------------|----------|----------|----------------------|
+| `_id`       | ObjectId | ✓        | MongoDB default      |
+| `name`      | string   | ✓        | e.g. "Monthly budget"|
+| `description` | string | —        | Optional             |
+| `userId`    | ObjectId | ✓        | Ref User (owner)     |
+| `createdAt` | Date     | ✓        |                      |
+| `updatedAt` | Date     | ✓        |                      |
+
+**Relations**
+
+- **User** → **MoneyFlow**: one-to-many.
+- **MoneyFlow** → **Category**: one-to-many (user creates categories for this flow).
+- Transaction is linked to MoneyFlow only **via Category** (transaction has no moneyFlowId field).
+
+---
+
+## 4. Transaction
 
 A single income, expense, or investment record. **Type is not stored on the transaction**; it is derived from the linked category (`category.type`).
 
@@ -81,21 +107,47 @@ A single income, expense, or investment record. **Type is not stored on the tran
 | `currency`  | string   | ✓        | ISO 4217 (e.g. USD, EUR, UAH)               |
 | `date`      | Date     | ✓        | When the transaction occurred               |
 | `description` | string | —        | Optional note                               |
-| `categoryId`| ObjectId | ✓        | Ref Category (type comes from category)    |
+| `categoryId`| ObjectId | ✓        | Ref Category (type and money flow via category) |
 | `userId`    | ObjectId | ✓        | Ref User (owner)                            |
+| `tagIds`    | ObjectId[] | —     | Refs Tag (optional; default [])            |
 | `createdAt`| Date     | ✓        |                                            |
 | `updatedAt`| Date     | ✓        |                                            |
 
 **Constraints**
 
 - `amount` > 0.
-- `categoryId` must reference an existing Category.
+- `categoryId` must reference a Category (money flow is derived via category).
 - `userId` must reference an existing User.
+- Each element of `tagIds` must reference a Tag owned by the same user.
 
 **Relations**
 
 - **User** → **Transaction**: one-to-many (user has many transactions).
-- **Category** → **Transaction**: one-to-many (category has many transactions).
+- **Category** → **Transaction**: one-to-many. Money flow is **via category** (Transaction has no moneyFlowId).
+- **Transaction** ↔ **Tag**: many-to-many via `Transaction.tagIds` (array of Tag refs).
+
+---
+
+## 5. Tag
+
+User-defined labels for transactions (e.g. "urgent", "reimbursable"). User-scoped.
+
+| Field      | Type     | Required | Notes                |
+|-----------|----------|----------|----------------------|
+| `_id`     | ObjectId | ✓        | MongoDB default      |
+| `name`    | string   | ✓        | e.g. "urgent"        |
+| `userId`  | ObjectId | ✓        | Ref User (owner)     |
+| `createdAt` | Date   | ✓        |                      |
+| `updatedAt` | Date   | ✓        |                      |
+
+**Constraints**
+
+- Unique per user: one tag name per user (compound unique index on `(userId, name)`).
+
+**Relations**
+
+- **User** → **Tag**: one-to-many.
+- **Tag** ↔ **Transaction**: many-to-many (transactions have `tagIds` array).
 
 ---
 
@@ -110,24 +162,22 @@ A single income, expense, or investment record. **Type is not stored on the tran
 | From       | To           | Relation   | Foreign key   |
 |-----------|--------------|------------|---------------|
 | User      | Transaction  | 1 : N      | `Transaction.userId` → `User._id` |
-| User      | Category     | 1 : N      | `Category.userId` → `User._id` (nullable)   |
-| Category  | Transaction  | 1 : N      | `Transaction.categoryId` → `Category._id`  |
+| User      | MoneyFlow    | 1 : N      | `MoneyFlow.userId` → `User._id`   |
+| User      | Tag          | 1 : N      | `Tag.userId` → `User._id`         |
+| MoneyFlow | Category     | 1 : N      | `Category.moneyFlowId` → `MoneyFlow._id`   |
+| Category  | Transaction  | 1 : N      | `Transaction.categoryId` → `Category._id` (money flow via category) |
+| Tag       | Transaction  | N : M      | `Transaction.tagIds[]` → `Tag._id`        |
 
 ---
 
 ## Indexes (recommended)
 
 - **users**: `email` (unique), `googleId` (unique, sparse).
-- **categories**: `(name, type, userId)` (unique), `userId`, `type`.
-- **transactions**: `userId`, `categoryId`, `date`, `(userId, date)` for listing by user and time.
+- **categories**: `(name, type, moneyFlowId)` (unique), `moneyFlowId`, `type`.
+- **money-flows**: `userId`.
+- **transactions**: `userId`, `categoryId`, `tagIds`, `date`, `(userId, date)`.
+- **tags**: `(userId, name)` (unique), `userId`.
 
 ---
-
-## Next steps (backend)
-
-1. Add Mongoose schemas for User, Category, Transaction.
-2. Add NestJS modules: Users, Categories, Transactions (and Auth later).
-3. Implement Auth (email + Google) and protect routes by `userId`.
-4. Seed or migrate system categories (`userId = null`).
 
 After the BE is in place, the React Native app will consume these APIs.

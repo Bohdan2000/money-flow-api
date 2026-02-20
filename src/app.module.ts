@@ -3,7 +3,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { CategoriesModule } from './categories/categories.module';
+import { MoneyFlowsModule } from './money-flows/money-flows.module';
 import { TransactionsModule } from './transactions/transactions.module';
+import { TagsModule } from './tags/tags.module';
 
 @Module({
   imports: [
@@ -13,7 +15,9 @@ import { TransactionsModule } from './transactions/transactions.module';
     AuthModule,
     UsersModule,
     CategoriesModule,
+    MoneyFlowsModule,
     TransactionsModule,
+    TagsModule,
   ],
   controllers: [],
   providers: [],

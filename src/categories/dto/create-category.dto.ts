@@ -1,8 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsMongoId, IsOptional, IsString } from 'class-validator';
 import { TransactionType } from '../../common/enums/transaction-type.enum';
 
 export class CreateCategoryDto {
+  @ApiProperty({
+    example: '507f1f77bcf86cd799439011',
+    description: 'Money flow ID (category belongs to this flow)',
+  })
+  @IsMongoId()
+  moneyFlowId: string;
+
   @ApiProperty({ example: 'Food', description: 'Category name' })
   @IsString()
   name: string;

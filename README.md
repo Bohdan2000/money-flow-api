@@ -14,8 +14,10 @@ Backend API for **Money Flow** — track income, expenses, and investments. Buil
 ## Features
 
 - **Auth:** Register, login (email/password), Google login, refresh token, profile
-- **Categories:** CRUD; user-scoped and system categories; type = income | expense | investment
-- **Transactions:** CRUD; amount, currency, date, description, category (type derived from category)
+- **Money flows:** Create first; groups (e.g. budget, investments) with name and description
+- **Categories:** CRUD per money flow; create categories for a flow; type = income | expense | investment
+- **Tags:** CRUD; user-scoped labels (e.g. "urgent", "reimbursable"); attach to transactions
+- **Transactions:** CRUD; require categoryId (money flow via category); optional tagIds; filter by money flow, type, tag
 - **Docker:** Dockerfile + docker-compose (app + MongoDB)
 
 ## Prerequisites
@@ -77,8 +79,10 @@ docker compose up --build
 | Area        | Endpoints |
 |------------|-----------|
 | **Auth**   | `POST /auth/register`, `POST /auth/login`, `POST /auth/google`, `POST /auth/refresh`, `GET /auth/profile` |
-| **Categories** | `GET/POST /categories`, `GET/PATCH/DELETE /categories/:id` |
-| **Transactions** | `GET/POST /transactions`, `GET/PATCH/DELETE /transactions/:id` |
+| **Money flows** | `GET/POST /money-flows`, `GET/PATCH/DELETE /money-flows/:id` (create first) |
+| **Categories** | `GET/POST /categories` (body: `moneyFlowId`, list: `?moneyFlowId=` required), `GET/PATCH/DELETE /categories/:id` |
+| **Tags** | `GET/POST /tags`, `GET/PATCH/DELETE /tags/:id` |
+| **Transactions** | `GET/POST /transactions` (body: `categoryId`, optional `tagIds`; list: `?moneyFlowId=`, `?tagId=`, etc.), `GET/PATCH/DELETE /transactions/:id` |
 
 Protected routes use **Bearer** token (`Authorization: Bearer <accessToken>`).  
 See **[docs/API.md](docs/API.md)** for request/response details and **[docs/DATA_MODELS.md](docs/DATA_MODELS.md)** for entities and relations.
@@ -90,7 +94,9 @@ src/
 ├── auth/           # Auth, JWT, refresh token, Google
 ├── users/          # User schema and service
 ├── categories/     # Categories CRUD
-├── transactions/   # Transactions CRUD (type from category)
+├── money-flows/    # Money flow groups (e.g. budget, investments)
+├── tags/           # Tags CRUD (labels for transactions)
+├── transactions/   # Transactions CRUD (categoryId, optional tagIds; filter by tag)
 ├── common/         # Shared enums (e.g. TransactionType)
 ├── app.module.ts
 └── main.ts

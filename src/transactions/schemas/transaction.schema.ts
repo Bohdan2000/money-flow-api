@@ -22,11 +22,15 @@ export class Transaction {
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
+
+  @Prop({ type: [Types.ObjectId], ref: 'Tag', default: [] })
+  tagIds: Types.ObjectId[];
 }
 
 export const TransactionSchema = SchemaFactory.createForClass(Transaction);
 
 TransactionSchema.index({ userId: 1 });
 TransactionSchema.index({ categoryId: 1 });
+TransactionSchema.index({ tagIds: 1 });
 TransactionSchema.index({ date: -1 });
 TransactionSchema.index({ userId: 1, date: -1 });

@@ -15,12 +15,12 @@ export class Category {
   @Prop({ default: '' })
   icon: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', default: null })
-  userId: Types.ObjectId | null;
+  @Prop({ type: Types.ObjectId, ref: 'MoneyFlow', required: true })
+  moneyFlowId: Types.ObjectId;
 }
 
 export const CategorySchema = SchemaFactory.createForClass(Category);
 
-CategorySchema.index({ name: 1, type: 1, userId: 1 }, { unique: true });
-CategorySchema.index({ userId: 1 });
+CategorySchema.index({ name: 1, type: 1, moneyFlowId: 1 }, { unique: true });
+CategorySchema.index({ moneyFlowId: 1 });
 CategorySchema.index({ type: 1 });

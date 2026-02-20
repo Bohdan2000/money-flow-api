@@ -48,20 +48,48 @@ Current user profile.
 
 ## Categories (protected)
 
-- **POST /categories** – Create category. Body: `{ "name", "type": "income"|"expense"|"investment", "icon"?: "" }`
-- **GET /categories** – List user + system categories. Query: `?type=expense` (optional)
+Categories belong to a **money flow**. Create a money flow first, then categories for it.
+
+- **POST /categories** – Create category for a money flow. Body: `{ "moneyFlowId", "name", "type": "income"|"expense"|"investment", "icon"?: "" }`
+- **GET /categories** – List categories for a money flow. Query: **`?moneyFlowId=`** (required), `?type=expense` (optional)
 - **GET /categories/:id** – Get one category
-- **PATCH /categories/:id** – Update (user categories only)
-- **DELETE /categories/:id** – Delete (user categories only)
+- **PATCH /categories/:id** – Update
+- **DELETE /categories/:id** – Delete
+
+---
+
+## Money Flows (protected)
+
+Groups for transactions (e.g. budget, investments).
+
+- **POST /money-flows** – Create. Body: `{ "name", "description"?: "" }`
+- **GET /money-flows** – List current user’s money flows
+- **GET /money-flows/:id** – Get one
+- **PATCH /money-flows/:id** – Update
+- **DELETE /money-flows/:id** – Delete
+
+---
+
+## Tags (protected)
+
+User-defined labels for transactions (e.g. "urgent", "reimbursable").
+
+- **POST /tags** – Create. Body: `{ "name" }` (unique per user)
+- **GET /tags** – List current user's tags
+- **GET /tags/:id** – Get one
+- **PATCH /tags/:id** – Update name
+- **DELETE /tags/:id** – Delete
 
 ---
 
 ## Transactions (protected)
 
-- **POST /transactions** – Create. Body: `{ "amount", "currency", "date" (ISO), "description"?, "type", "categoryId" }`
-- **GET /transactions** – List. Query: `?from=...&to=...&limit=...&skip=...` (optional)
-- **GET /transactions/:id** – Get one (with category populated)
-- **PATCH /transactions/:id** – Update
+Create transactions **after** creating a money flow and its categories. Money flow is derived via category (transaction has no moneyFlowId field). Optional **tagIds** attach tags to a transaction.
+
+- **POST /transactions** – Create. Body: `{ "amount", "currency", "date" (ISO), "description"?, "categoryId", "tagIds"?: ["id1", "id2"] }` (category must belong to user’s money flow; tag IDs must belong to user)
+- **GET /transactions** – List. Query: `?from=...&to=...&moneyFlowId=...&type=...&tagId=...&limit=...&skip=...` (moneyFlowId filters by category’s flow; tagId filters by transactions that have this tag)
+- **GET /transactions/:id** – Get one (returns categoryId, userId, tagIds as IDs)
+- **PATCH /transactions/:id** – Update (including optional tagIds; replaces existing tags)
 - **DELETE /transactions/:id** – Delete
 
 ---

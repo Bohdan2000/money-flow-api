@@ -69,6 +69,16 @@ export class TransactionsController {
     enum: TransactionType,
     description: 'Filter by type (via category)',
   })
+  @ApiQuery({
+    name: 'moneyFlowId',
+    required: false,
+    description: 'Filter by money flow ID',
+  })
+  @ApiQuery({
+    name: 'tagId',
+    required: false,
+    description: 'Filter by tag ID (transactions that have this tag)',
+  })
   @ApiResponse({
     status: 200,
     description: 'List of transactions',
@@ -81,11 +91,15 @@ export class TransactionsController {
     @Query('limit') limit?: string,
     @Query('skip') skip?: string,
     @Query('type') type?: TransactionType,
+    @Query('moneyFlowId') moneyFlowId?: string,
+    @Query('tagId') tagId?: string,
   ) {
     return this.transactionsService.findAll(user._id, {
       from,
       to,
       type,
+      moneyFlowId,
+      tagId,
       limit: limit ? parseInt(limit, 10) : undefined,
       skip: skip ? parseInt(skip, 10) : undefined,
     });

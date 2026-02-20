@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsArray,
   IsDateString,
   IsMongoId,
   IsNumber,
@@ -34,4 +35,14 @@ export class UpdateTransactionDto {
   @IsOptional()
   @IsMongoId()
   categoryId?: string;
+
+  @ApiPropertyOptional({
+    example: ['507f1f77bcf86cd799439013'],
+    description: 'Tag IDs to attach (replaces existing)',
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsMongoId({ each: true })
+  tagIds?: string[];
 }
